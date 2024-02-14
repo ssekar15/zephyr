@@ -1,0 +1,9 @@
+tests:
+  net.ocpp:
+    depends_on: netif
+    platform_allow:
+      - native_sim/native
+    min_ram: 16
+    tags:
+      - net
+      - ocpp
