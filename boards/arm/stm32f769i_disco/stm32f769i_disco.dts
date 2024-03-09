@@ -10,6 +10,7 @@
 #include <zephyr/dt-bindings/memory-attr/memory-attr-arm.h>
 #include "arduino_r3_connector.dtsi"
 #include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/mipi_dsi/mipi_dsi.h>
 
 / {
 	model = "STMicroelectronics STM32F769I DISCOVERY board";
@@ -22,20 +23,72 @@
 		zephyr,flash = &flash0;
 		zephyr,dtcm = &dtcm;
 		zephyr,flash-controller = &mx25l51245g;
+		zephyr,display = &ltdc;
+	};
+
+	mipi_dsi: dsihost@40016C00 {
+		compatible = "st,stm32-mipi-dsi";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0x40016C00 0x800>;
+		clock-names = "dsiclk", "refclk", "pixelclk";
+		clocks = <&rcc STM32_CLOCK_BUS_APB2 0x08000000>,
+			 <&rcc STM32_SRC_HSI NO_SEL>,
+			 <&rcc STM32_SRC_PLL_R DSI_SEL(1)>;
+		resets = <&rctl STM32_RESET(APB2, 27U)>;
+
+		pll-ndiv = <100>;
+		pll-idf = <5>;
+		pll-odf = <1>;
+
+		vs-active-high;
+		hs-active-high;
+		de-active-high;
+
+		status = "okay";
+		phy-timings = [35 35 35 35 0 10];
+
+#if 0
+		hx8394-rk055hdmipi4ma0@0 {
+			status = "okay";
+			compatible = "himax,hx8394";
+			reg = <0x0>;
+			reset-gpios = <&gpioj 15 GPIO_ACTIVE_LOW>;
+			bl-gpios = <&gpioi 14 GPIO_ACTIVE_HIGH>;
+			data-lanes = <2>;
+			height = <800>;
+			width = <480>;
+			pixel-format = <MIPI_DSI_PIXFMT_RGB565>;
+		};
+#else
+		otm8009a: otm8009a@0 {
+			status = "okay";
+			compatible = "orisetech,otm8009a";
+			reg = <0x0>;
+			height = <800>;
+			width = <480>;
+			reset-gpios = <&gpioj 15 GPIO_ACTIVE_LOW>;
+			bl-gpios = <&gpioi 14 GPIO_ACTIVE_HIGH>;
+			data-lanes = <2>;
+			pixel-format = <MIPI_DSI_PIXFMT_RGB888>;
+			rotation = <90>;
+		};
+#endif
 	};
 
 	sdram1: sdram@c0000000 {
 		compatible = "zephyr,memory-region", "mmio-sram";
 		device_type = "memory";
-		reg = <0xc0000000 DT_SIZE_M(16)>;
+		reg = <0xc0000000 DT_SIZE_M(128)>;
 		zephyr,memory-region = "SDRAM1";
-		zephyr,memory-attr = <( DT_MEM_ARM(ATTR_MPU_RAM) )>;
+		zephyr,memory-attr = <( DT_MEM_ARM(ATTR_MPU_RAM_NOCACHE) )>;
 	};
 
 	leds {
 		compatible = "gpio-leds";
 		red_led_1:led_1 {
-			gpios = <&gpioj 13 GPIO_ACTIVE_HIGH>;
+			/*gpios = <&gpioj 13 GPIO_ACTIVE_HIGH>;*/
+			gpios = <&gpioi 14 GPIO_ACTIVE_HIGH>;
 			label = "User LD1";
 		};
 		green_led_2:led_2 {
@@ -83,9 +136,10 @@
 
 &pll {
 	div-m = <25>;
-	mul-n = <432>;
+	mul-n = <400>;
 	div-p = <2>;
 	div-q = <9>;
+	div-r = <7>;
 	clocks = <&clk_hse>;
 	status = "okay";
 };
@@ -238,3 +292,39 @@ arduino_serial: &usart6 {};
 		};
 	};
 };
+
+&ltdc {
+	//disp-on-gpios = <&gpioj 15 GPIO_ACTIVE_HIGH>;
+	bl-ctrl-gpios = <&gpioi 14 GPIO_ACTIVE_HIGH>;
+
+	//resets = <&rctl STM32_RESET(APB2, 26U)>;
+
+	ext-sdram = <&sdram1>;
+	status = "okay";
+
+	width = <800>;
+	height = <480>;
+	pixel-format = <PANEL_PIXEL_FORMAT_RGB_565>;
+	display-timings {
+		compatible = "zephyr,panel-timing";
+		de-active = <0>;
+		pixelclk-active = <0>;
+		hsync-active = <0>;
+		vsync-active = <0>;
+		hsync-len = <1>;
+		vsync-len = <10>;
+		hback-porch = <43>;
+		vback-porch = <12>;
+		hfront-porch = <8>;
+		vfront-porch = <4>;
+	};
+	def-back-color-red = <0>;
+	def-back-color-green = <0>;
+	def-back-color-blue = <0>;
+};
+
+&clk_hsi {
+	clock-frequency = <DT_FREQ_M(25)>;
+	status = "okay";
+};
+

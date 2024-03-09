@@ -299,6 +299,7 @@ static int stm32_ltdc_init(const struct device *dev)
 	/* Configure and set display backlight control GPIO */
 	if (config->bl_ctrl_gpio.port) {
 		err = gpio_pin_configure_dt(&config->bl_ctrl_gpio, GPIO_OUTPUT_ACTIVE);
+			LOG_ERR("Configuration of display backlight control GPIO");
 		if (err < 0) {
 			LOG_ERR("Configuration of display backlight control GPIO failed");
 			return err;

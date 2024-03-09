@@ -6,6 +6,8 @@
 
 #include <stdio.h>
 
+#include <lvgl.h>
+#include <lvgl_input_device.h>
 #include <zephyr/net/net_if.h>
 #include <zephyr/net/net_core.h>
 #include <zephyr/net/net_context.h>
@@ -15,6 +17,7 @@
 #include <zephyr/posix/time.h>
 #include <zephyr/random/random.h>
 #include <zephyr/zbus/zbus.h>
+#include <zephyr/drivers/display.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
@@ -55,6 +58,29 @@ static void ocpp_handler_cb(struct net_mgmt_event_callback *cb,
 				      buf, sizeof(buf)));
 
 	k_sem_give(&run_app);
+}
+
+void display(char *toshow)
+{
+
+	lv_obj_t *lmsg;
+	lv_obj_t *obj;
+
+	obj = lv_scr_act();
+	if (! obj) {
+		LOG_ERR("lv scr act fail");
+		return;
+	}
+
+	lmsg = lv_label_create(lv_scr_act());
+	if (! lmsg) {
+		LOG_ERR("lv label create fail");
+		return;
+	}
+
+	lv_label_set_text(lmsg , toshow);
+	lv_obj_align(lmsg , LV_ALIGN_CENTER, 0, 0);
+	lv_task_handler();
 }
 
 static int ocpp_test_dhcp_init(void)
@@ -232,11 +258,13 @@ static void ocpp_cp_entry(void *p1, void *p2, void *p3)
 		return;
 	}
 
+	display("CP: idtag Authorized");
 	ret = ocpp_start_transaction(sh, sys_rand32_get(), idcon, timeout_ms);
 	if (!ret) {
 		const struct zbus_channel *chan;
 		union ocpp_io_value io;
 
+		display("CP: start charging connectord");
 		LOG_INF("ocpp start charging connector id %d\n", idcon);
 		memset(&io, 0xff, sizeof(io));
 
@@ -260,6 +288,8 @@ static void ocpp_cp_entry(void *p1, void *p2, void *p3)
 	}
 
 	LOG_INF("ocpp stop charging connector id %d\n", idcon);
+	display("CP: stop charging connectord");
+
 	k_sleep(K_SECONDS(1));
 	ocpp_session_close(sh);
 	tid[idcon - 1] = NULL;
@@ -341,6 +371,8 @@ int main(void)
 
 	printk("OCPP sample %s\n", CONFIG_BOARD);
 
+	display("Zephyr EVSE - OCPP Charge Point");
+	printk("OCPP sample aftr disp %s\n", CONFIG_BOARD);
 #if defined(CONFIG_NET_DHCPV4)
 	ocpp_test_dhcp_init();
 #endif
