@@ -16,4 +16,5 @@ Protocols
    mqtt
    mqtt_sn
    ptp
+   ocpp
    tftp

@@ -2886,20 +2886,24 @@ Networking:
     - doc/connectivity/networking/api/gptp.rst
     - doc/connectivity/networking/api/ieee802154.rst
     - doc/connectivity/networking/api/ptp.rst
+    - doc/connectivity/networking/api/ocpp.rst
     - doc/connectivity/networking/api/wifi.rst
     - doc/connectivity/networking/api/http*.rst
     - include/zephyr/net/gptp.h
     - include/zephyr/net/ieee802154*.h
     - include/zephyr/net/ptp.h
     - include/zephyr/net/wifi*.h
+    - include/zephyr/net/buf.h
     - include/zephyr/net/dhcpv4*.h
     - include/zephyr/net/http/
     - samples/net/gptp/
     - samples/net/sockets/coap_*/
     - samples/net/sockets/*http*/
     - samples/net/lwm2m_client/
+    - samples/net/ocpp/
     - samples/net/wifi/
     - samples/net/dhcpv4_client/
+    - subsys/net/buf*.c
     - subsys/net/l2/ethernet/gptp/
     - subsys/net/l2/ieee802154/
     - subsys/net/l2/wifi/
@@ -2908,11 +2912,13 @@ Networking:
     - subsys/net/lib/http/
     - subsys/net/lib/lwm2m/
     - subsys/net/lib/ptp/
+    - subsys/net/lib/ocpp/
     - subsys/net/lib/tls_credentials/
     - subsys/net/lib/dhcpv4/
     - tests/net/dhcpv4/
     - tests/net/ieee802154/
     - tests/net/lib/http*/
+    - tests/net/lib/ocpp/
     - tests/net/wifi/
   labels:
     - "area: Networking"
@@ -3091,6 +3097,17 @@ Networking:
     - "area: IEEE 802.15.4"
   tests:
     - net.ieee802154
+
+"Networking: OCPP":
+  status: maintained
+  maintainers:
+    - ssekar15
+  files:
+    - samples/net/ocpp/
+    - subsys/net/lib/ocpp/
+    - tests/net/lib/ocpp/
+  labels:
+    - "area: OCPP"
 
 "Networking: OpenThread":
   status: maintained
@@ -5795,6 +5812,7 @@ zbus:
   tests:
     - llext
 
+<<<<<<< HEAD
 RX arch:
   status: maintained
   maintainers:
@@ -5810,3 +5828,13 @@ RX arch:
     - "area: RX"
   tests:
     - arch.rx
+=======
+"West project: json-c":
+  status: maintained
+  maintainers:
+    - parthitce
+  files:
+    - modules/json-c/
+  labels:
+    - "area: JSON"
+>>>>>>> ocpp-zep/ocpp_upstream

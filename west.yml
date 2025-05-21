@@ -23,6 +23,8 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
     - name: babblesim
       url-base: https://github.com/BabbleSim
+    - name: linumiz
+      url-base: https://github.com/linumiz
 
   group-filter: [-babblesim, -optional]
 
@@ -365,7 +367,14 @@ manifest:
     - name: zcbor
       revision: 9b07780aca6fb21f82a241ba386ad9b379809337
       path: modules/lib/zcbor
+<<<<<<< HEAD
   # zephyr-keep-sorted-stop
+=======
+    - name: json-c
+      remote: linumiz
+      path: modules/lib/json-c
+      revision: dev/zephyr
+>>>>>>> ocpp-zep/ocpp_upstream
 
   self:
     path: zephyr
