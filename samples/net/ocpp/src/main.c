@@ -16,6 +16,8 @@
 #include <zephyr/random/random.h>
 #include <zephyr/zbus/zbus.h>
 
+#include "net_sample_common.h"
+
 #if __POSIX_VISIBLE < 200809
 char    *strdup(const char *);
 #endif
@@ -24,59 +26,10 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 #define NO_OF_CONN 2
 K_KERNEL_STACK_ARRAY_DEFINE(cp_stk, NO_OF_CONN, 2 * 1024);
-K_SEM_DEFINE(run_app, 0, 1);
 
 static struct k_thread tinfo[NO_OF_CONN];
 static k_tid_t tid[NO_OF_CONN];
 static char idtag[NO_OF_CONN][25];
-
-#if defined(CONFIG_NET_DHCPV4)
-static struct net_mgmt_event_callback ocpp_dhcp_cb;
-
-static void ocpp_handler_cb(struct net_mgmt_event_callback *cb,
-			    uint64_t mgmt_event, struct net_if *iface)
-{
-	char buf[NET_IPV4_ADDR_LEN];
-
-	LOG_INF("net mgr cb");
-	if (mgmt_event != NET_EVENT_IPV4_DHCP_BOUND) {
-		return;
-	}
-
-	LOG_INF("Your address: %s",
-			net_addr_ntop(AF_INET,
-				      &iface->config.dhcpv4.requested_ip,
-				      buf, sizeof(buf)));
-	LOG_INF("Lease time: %u seconds",
-			iface->config.dhcpv4.lease_time);
-	LOG_INF("Router: %s",
-			net_addr_ntop(AF_INET,
-				      &iface->config.ip.ipv4->gw,
-				      buf, sizeof(buf)));
-
-	k_sem_give(&run_app);
-}
-
-static int ocpp_test_dhcp_init(void)
-{
-	struct net_if *iface;
-
-	net_mgmt_init_event_callback(&ocpp_dhcp_cb, ocpp_handler_cb,
-				     NET_EVENT_IPV4_DHCP_BOUND);
-
-	net_mgmt_add_event_callback(&ocpp_dhcp_cb);
-
-	iface = net_if_get_default();
-	if (!iface) {
-		LOG_ERR("wifi/eth interface not available");
-		return -1;
-	}
-
-	net_dhcpv4_start(iface);
-
-	return 0;
-}
-#endif
 
 static int ocpp_get_time_from_sntp(void)
 {
@@ -212,6 +165,7 @@ static void ocpp_cp_entry(void *p1, void *p2, void *p3)
 		/* Avoid quick retry since authorization request is possible only
 		 * after Bootnotification process (handled in lib) completed.
 		 */
+
 		k_sleep(K_SECONDS(5));
 		ret = ocpp_authorize(sh,
 				     idtag,
@@ -342,12 +296,7 @@ int main(void)
 
 	printk("OCPP sample %s\n", CONFIG_BOARD);
 
-#if defined(CONFIG_NET_DHCPV4)
-	ocpp_test_dhcp_init();
-#endif
-
-	/* Wait for device dhcp ip recive */
-	k_sem_take(&run_app, K_FOREVER);
+	wait_for_network();
 
 	ret = ocpp_getaddrinfo(CONFIG_NET_SAMPLE_OCPP_SERVER, CONFIG_NET_SAMPLE_OCPP_PORT, &ip);
 	if (ret < 0) {
