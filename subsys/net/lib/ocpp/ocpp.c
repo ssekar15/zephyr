@@ -120,25 +120,26 @@ static int ocpp_connect_to_cs(struct ocpp_info *ctx)
 	int ret;
 	struct websocket_request config = {0};
 	struct ocpp_upstream_info *ui = &ctx->ui;
-	struct sockaddr addr4;
-	struct sockaddr_in6 addr6;
-	struct sockaddr *addr;
+	struct sockaddr addr_buf;
+	struct sockaddr *addr = &addr_buf;
 	int addr_size;
 
 	if (ui->csi.sa_family == AF_INET) {
-		addr = &addr4;
-		addr_size = sizeof(addr4);
+#if defined(CONFIG_NET_IPV4)
+		addr_size = sizeof(addr_buf);
 		addr->sa_family = ui->csi.sa_family;
 		net_sin(addr)->sin_port = htons(ui->csi.port);
 		zsock_inet_pton(addr->sa_family, ui->csi.cs_ip,
 				&net_sin(addr)->sin_addr);
+#endif
 	} else {
-		addr = (struct sockaddr *)&addr6;
-		addr_size = sizeof(addr6);
+#if defined(CONFIG_NET_IPV6)
+		addr_size = sizeof(struct sockaddr_in6);
 		addr->sa_family = ui->csi.sa_family;
 		net_sin6(addr)->sin6_port = htons(ui->csi.port);
 		zsock_inet_pton(addr->sa_family, ui->csi.cs_ip,
 				&net_sin6(addr)->sin6_addr);
+#endif
 	}
 
 	ret = zsock_connect(ui->tcpsock, addr, addr_size);
